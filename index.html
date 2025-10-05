@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Manager</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f7f9fc; }
+        /* Custom soft shadow */
+        .soft-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06); }
+        .card-bg { background-color: #ffffff; }
+        .main-content { padding-bottom: 72px; /* Space for the fixed bottom nav */ }
+        .nav-btn {
+            @apply flex flex-col items-center justify-center p-1 text-sm transition-colors duration-200;
+        }
+        .file-input-label {
+            @apply flex items-center justify-center bg-gray-100 text-gray-700 py-2 rounded-lg cursor-pointer hover:bg-gray-200 transition duration-150 border border-gray-300;
+        }
+        .file-input {
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+            z-index: -1;
+        }
+        /* Custom scrollbar for mobile feel */
+        .scroll-list::-webkit-scrollbar {
+            display: none;
+        }
+        .scroll-list {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="max-w-md mx-auto min-h-screen relative soft-shadow">
+
+        <!-- Header -->
+        <header class="bg-white p-4 soft-shadow sticky top-0 z-10">
+            <h1 id="header-title" class="text-xl font-bold text-gray-800">Dashboard</h1>
+        </header>
+
+        <!-- --- DEBUG MESSAGE - THIS WILL DISAPPEAR IF JS RUNS --- -->
+        <!-- Note: If you see this, the JS code is not running! -->
+        <div id="debug-error" class="p-4 bg-red-100 border-l-4 border-red-500 text-red-700 m-4 rounded-lg soft-shadow">
+            <p class="font-bold">Initialization Error</p>
+            <p class="text-sm">The application's logic is not starting. This usually means the file name is wrong (must be index.html) or the script tags were corrupted during copy/paste. Please refresh the page or check the file content on GitHub.</p>
+        </div>
+        <!-- -------------------------------------------------------- -->
+
+        <!-- Main Content Area -->
+        <div id="view-content" class="p-4 main-content">
+            <!-- Content will be injected here by JavaScript -->
+        </div>
+
+        <!-- Fixed Bottom Navigation Bar -->
+        <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 z-20 soft-shadow">
+            <div class="flex justify-around h-16">
+                <button class="nav-btn text-blue-600 active-nav" data-view="dashboard">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2m-7 7h3m-7 7h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3"></path></svg>
+                    <span class="text-xs">Home</span>
+                </button>
+                <button class="nav-btn text-gray-500 hover:text-blue-600" data-view="productList">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h.01"></path></svg>
+                    <span class="text-xs">Products</span>
+                </button>
+                <button class="nav-btn text-gray-500 hover:text-blue-600" data-view="addOrder">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-3 0h.01M16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 11h.01M16 7.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM9 18h.01M10 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    <span class="text-xs">Order</span>
+                </button>
+                <button class="nav-btn text-gray-500 hover:text-blue-600" data-view="customerList">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    <span class="text-xs">Customers</span>
+                </button>
+                <button class="nav-btn text-gray-500 hover:text-blue-600" data-view="reports">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-2.414-2.414A1 1 0 0015.586 6H7a2 2 0 00-2 2v11a2 2 0 002 2z"></path></svg>
+                    <span class="text-xs">Reports</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Modal for Messages/Confirmation (in place of alert/confirm) -->
+    <div id="message-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-xl soft-shadow max-w-xs mx-auto">
+            <h3 id="modal-title" class="text-lg font-bold mb-3 text-gray-800">Notification</h3>
+            <p id="modal-message" class="text-sm text-gray-600 mb-4"></p>
+            <button onclick="closeModal()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-150">Got It</button>
+        </div>
+    </div>
+
+<script>
+    // --- Global State and Utility Functions ---
+
+    // Hides the debug message as soon as the JavaScript begins execution
+    document.getElementById('debug-error').style.display = 'none';
+
+    const STORAGE_KEYS = {
+        PRODUCTS: 'order_manager_products',
+        CUSTOMERS: 'order_manager_customers',
+        ORDERS: 'order_manager_orders',
+    };
+
+    const DOM = {
+        content: document.getElementById('view-content'),
+        title: document.getElementById('header-title'),
+        navButtons: document.querySelectorAll('.nav-btn'),
+        modal: document.getElementById('message-modal'),
+        modalTitle: document.getElementById('modal-title'),
+        modalMessage: document.getElementById('modal-message'),
+    };
+
+    let data = {
+        products: [],
+        customers: [],
+        orders: [],
+    };
+
+    function loadData() {
+        try {
+            data.products = JSON.parse(localStorage.getItem(STORAGE_KEYS.PRODUCTS) || '[]')
+                .map(p => ({...p, id: p.id || generateId()})); 
+            data.customers = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMERS) || '[]')
+                .map(c => ({...c, id: c.id || generateId()})); 
+            data.orders = JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS) || '[]');
+            console.log("Data loaded successfully.");
+        } catch (e) {
+            console.error("Error loading data from localStorage:", e);
+        }
+    }
+
+    function saveData(key, items) {
+        try {
+            localStorage.setItem(key, JSON.stringify(items));
+            loadData(); 
+            console.log(`Data saved for key: ${key}`);
+        } catch (e) {
+            console.error(`Error saving data for key: ${key}`, e);
+        }
+    }
+
+    function showMessage(title, message) {
+        DOM.modalTitle.textContent = title;
+        DOM.modalMessage.textContent = message;
+        DOM.modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        DOM.modal.classList.add('hidden');
+    }
+    
+    // A replacement for window.confirm()
+    function customConfirm(message, onConfirm) {
+        // Create a temporary confirmation modal setup
+        const modalHtml = `
+            <div id="confirm-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white p-6 rounded-xl soft-shadow max-w-xs mx-auto">
+                    <h3 class="text-lg font-bold mb-3 text-gray-800">Confirm Action</h3>
+                    <p class="text-sm text-gray-600 mb-4">${message}</p>
+                    <div class="flex justify-end space-x-3">
+                        <button id="confirm-cancel" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition duration-150">Cancel</button>
+                        <button id="confirm-ok" class="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition duration-150">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const confirmModal = document.getElementById('confirm-modal');
+
+        const removeModal = () => document.body.removeChild(confirmModal);
+
+        document.getElementById('confirm-ok').onclick = () => {
+            removeModal();
+            onConfirm(true);
+        };
+
+        document.getElementById('confirm-cancel').onclick = () => {
+            removeModal();
+            onConfirm(false);
+        };
+    }
+
+
+    function generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substring(2);
+    }
+
+    function formatDate(timestamp) {
+        if (!timestamp) return 'N/A';
+        const date = new Date(timestamp);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+    
+    // Helper to convert file to Base64 string asynchronously
+    const readFileAsBase64 = (file) => {
+        return new Promise((resolve) => {
+            if (!file) return resolve(null);
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => {
+                console.error("FileReader failed.");
+                resolve(null);
+            }; 
+            reader.readAsDataURL(file);
+        });
+    };
+
+    // --- Core View Rendering ---
+
+    function setActiveNav(view) {
+        // Determine the base view (e.g., 'productForm' -> 'product') for matching nav button
+        const baseView = view.replace('List', '').replace('Form', '').replace('Edit', '').replace('dashboard', 'dashboard').replace('reports', 'reports').replace('addOrder', 'addOrder');
+        
+        DOM.navButtons.forEach(btn => {
+            const btnView = btn.getAttribute('data-view');
+            const isActive = btnView === baseView || (baseView === 'addOrder' && btnView === 'addOrder');
+            btn.classList.toggle('text-blue-600', isActive);
+            btn.classList.toggle('text-gray-500', !isActive);
+        });
+    }
+
+    function renderView(view, id = null) {
+        loadData(); 
+        DOM.content.innerHTML = ''; 
+
+        switch (view) {
+            case 'dashboard':
+                DOM.title.textContent = 'Dashboard';
+                renderDashboard();
+                break;
+            case 'productList':
+                DOM.title.textContent = 'Product List';
+                renderProductList();
+                break;
+            case 'productForm':
+                DOM.title.textContent = id ? 'Edit Product' : 'Add New Product';
+                renderProductForm(id);
+                break;
+            case 'customerList':
+                DOM.title.textContent = 'Customer List';
+                renderCustomerList();
+                break;
+            case 'customerForm':
+                DOM.title.textContent = id ? 'Edit Customer' : 'Add New Customer';
+                renderCustomerForm(id);
+                break;
+            case 'addOrder':
+                DOM.title.textContent = 'Add New Order';
+                renderAddOrderForm();
+                break;
+            case 'reports':
+                DOM.title.textContent = 'Reports & Export';
+                renderReports();
+                break;
+            default:
+                renderDashboard();
+        }
+        setActiveNav(view);
+    }
+
+    // --- Dashboard View ---
+
+    function renderDashboard() {
+        const totalSales = data.orders.filter(o => o.status === 'Delivered').reduce((sum, order) => sum + parseFloat(order.amount || 0), 0);
+        const deliveredCount = data.orders.filter(o => o.status === 'Delivered').length;
+        const pendingCount = data.orders.filter(o => o.status === 'Pending' || o.status === 'Processing').length;
+
+        const productSales = data.orders.reduce((acc, order) => {
+            const product = data.products.find(p => p.id === order.productId);
+            if (product) {
+                acc[product.name] = (acc[product.name] || 0) + 1;
+            }
+            return acc;
+        }, {});
+
+        const topProducts = Object.entries(productSales)
+            .sort(([, countA], [, countB]) => countB - countA)
+            .slice(0, 3);
+
+        const cardStyle = "card-bg p-4 rounded-xl soft-shadow mb-4 flex-1";
+
+        let productListHtml = '';
+        if (data.products.length > 0) {
+            productListHtml = `
+                <div class="${cardStyle} col-span-2 mt-4">
+                    <h3 class="font-bold text-lg text-gray-700 mb-3">Recent Products Added</h3>
+                    <ul class="space-y-3">
+                        ${data.products.slice(0, 5).reverse().map(p => `
+                            <li onclick="renderView('productForm', '${p.id}')" class="flex items-center p-3 border border-gray-100 rounded-xl card-bg soft-shadow hover:bg-gray-50 active:scale-[0.98] transition-all duration-100">
+                                ${p.image ? `<img src="${p.image}" class="w-12 h-12 object-cover rounded-xl mr-3 border border-gray-200" alt="${p.name}">` : `
+                                    <div class="w-12 h-12 bg-gray-200 rounded-xl mr-3 flex items-center justify-center text-gray-500 text-xs font-semibold">
+                                        No Pic
+                                    </div>
+                                `}
+                                <div class="flex-1">
+                                    <p class="font-semibold text-gray-800 truncate">${p.name} <span class="text-xs text-blue-600">(${p.size})</span></p>
+                                    <p class="text-sm text-gray-600">$${p.price}</p>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        DOM.content.innerHTML = `
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="${cardStyle} bg-gradient-to-br from-blue-50 to-blue-200">
+                    <p class="text-sm text-gray-600">Total Sales</p>
+                    <h2 class="text-3xl font-extrabold text-blue-700 mt-1">$${totalSales.toFixed(2)}</h2>
+                </div>
+                <div class="${cardStyle} bg-gradient-to-br from-green-50 to-green-200">
+                    <p class="text-sm text-gray-600">Delivered Orders</p>
+                    <h2 class="text-3xl font-extrabold text-green-700 mt-1">${deliveredCount}</h2>
+                </div>
+                <div class="${cardStyle} bg-gradient-to-br from-yellow-50 to-yellow-200">
+                    <p class="text-sm text-gray-600">Pending Orders</p>
+                    <h2 class="text-3xl font-extrabold text-yellow-700 mt-1">${pendingCount}</h2>
+                </div>
+                <div class="${cardStyle} bg-gradient-to-br from-pink-50 to-pink-200">
+                    <p class="text-sm text-gray-600">Total Products</p>
+                    <h2 class="text-3xl font-extrabold text-pink-700 mt-1">${data.products.length}</h2>
+                </div>
+            </div>
+
+            <div class="${cardStyle} col-span-2">
+                <h3 class="font-bold text-lg text-gray-700 mb-3">Top Products Sold</h3>
+                <ul class="space-y-2">
+                    ${topProducts.length > 0 ? topProducts.map(([name, count], index) => `
+                        <li class="flex justify-between items-center text-gray-600">
+                            <span class="font-medium truncate">${index + 1}. ${name}</span>
+                            <span class="bg-gray-100 text-sm font-semibold px-2 py-0.5 rounded-full">${count} sales</span>
+                        </li>
+                    `).join('') : '<li class="text-sm text-gray-500">No sales data yet.</li>'}
+                </ul>
+            </div>
+            
+            ${productListHtml}
+        `;
+    }
+
+    // --- LIST VIEWS (Products & Customers) ---
+
+    function renderProductList() {
+        DOM.content.innerHTML = `
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">${data.products.length} Products Found</h2>
+                <button onclick="renderView('productForm')" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold soft-shadow hover:bg-blue-700 transition duration-150 flex items-center">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Add New
+                </button>
+            </div>
+            <ul class="space-y-3 scroll-list max-h-[70vh] overflow-y-auto">
+                ${data.products.length > 0 ? data.products.reverse().map(p => `
+                    <li onclick="renderView('productForm', '${p.id}')" class="flex items-center p-3 border border-gray-200 rounded-xl card-bg soft-shadow hover:bg-gray-50 active:scale-[0.99] transition-all duration-100">
+                        ${p.image ? `<img src="${p.image}" class="w-16 h-16 object-cover rounded-lg mr-4 border border-gray-200" alt="${p.name}">` : `
+                            <div class="w-16 h-16 bg-gray-100 rounded-lg mr-4 flex items-center justify-center text-gray-500 text-xs font-semibold">
+                                No Pic
+                            </div>
+                        `}
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-gray-800 truncate">${p.name}</p>
+                            <p class="text-sm text-gray-600 truncate">${p.size || 'N/A'} &bull; $${p.price}</p>
+                            <p class="text-xs text-gray-400">Added: ${formatDate(p.dateAdded)}</p>
+                        </div>
+                        <span class="text-sm text-blue-500 font-semibold ml-2">Edit &gt;</span>
+                    </li>
+                `).join('') : '<p class="card-bg p-4 rounded-xl text-center text-gray-500">No products added yet. Click "Add New" to get started!</p>'}
+            </ul>
+        `;
+    }
+
+    function renderCustomerList() {
+        DOM.content.innerHTML = `
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">${data.customers.length} Customers Found</h2>
+                <button onclick="renderView('customerForm')" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold soft-shadow hover:bg-blue-700 transition duration-150 flex items-center">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-9 9a9 9 0 1118 0M3 12a9 9 0 019-9"></path></svg>
+                    Add New
+                </button>
+            </div>
+            <ul class="space-y-3 scroll-list max-h-[70vh] overflow-y-auto">
+                ${data.customers.length > 0 ? data.customers.reverse().map(c => `
+                    <li onclick="renderView('customerForm', '${c.id}')" class="flex items-center p-3 border border-gray-200 rounded-xl card-bg soft-shadow hover:bg-gray-50 active:scale-[0.99] transition-all duration-100">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full mr-4 flex items-center justify-center text-purple-600 font-bold text-xl">
+                            ${c.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-gray-800 truncate">${c.name}</p>
+                            <p class="text-sm text-gray-600 truncate">${c.instagram || c.phone || 'Address Not Provided'}</p>
+                            <p class="text-xs text-gray-400">Added: ${formatDate(c.dateAdded)}</p>
+                        </div>
+                        <span class="text-sm text-blue-500 font-semibold ml-2">Edit &gt;</span>
+                    </li>
+                `).join('') : '<p class="card-bg p-4 rounded-xl text-center text-gray-500">No customers added yet. Click "Add New" to get started!</p>'}
+            </ul>
+        `;
+    }
+
+    // --- FORM VIEWS (Add/Edit) ---
+
+    function renderProductForm(id = null) {
+        const product = id ? data.products.find(p => p.id === id) : {};
+        const isEdit = !!id;
+
+        const formHtml = `
+            <form id="product-form" class="space-y-4" data-id="${id || ''}">
+                <input type="text" name="name" placeholder="Product Name (e.g., T-Shirt)" value="${product.name || ''}" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 card-bg soft-shadow">
+                <input type="text" name="size" placeholder="Size/Variant (e.g., S, M, L, Black)" value="${product.size || ''}" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 card-bg soft-shadow">
+                <input type="number" name="price" placeholder="Price ($)" value="${product.price || ''}" required step="0.01" min="0" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 card-bg soft-shadow">
+                <textarea name="description" placeholder="Description/Notes" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 card-bg soft-shadow">${product.description || ''}</textarea>
+                
+                <!-- IMAGE INPUT AND PREVIEW -->
+                <div class="space-y-2 card-bg p-3 rounded-xl border border-dashed border-blue-200">
+                    <label for="product-image-input" class="block text-sm font-medium text-gray-700">Product Photo (Optional - stored offline)</label>
+                    <p class="text-xs text-red-500 mb-2">${isEdit ? 'Upload a new photo to REPLACE the current one.' : ''}</p>
+                    <input type="file" id="product-image-input" name="image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <div id="image-preview" class="${product.image ? '' : 'hidden'} mt-2 border border-gray-300 rounded-lg p-1">
+                        <img src="${product.image || ''}" alt="Image Preview" class="max-w-full h-24 object-contain mx-auto rounded">
+                    </div>
+                </div>
+                <!-- END IMAGE INPUT -->
+                
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold soft-shadow hover:bg-blue-700 transition duration-150">${isEdit ? 'Save Changes' : 'Save Product'}</button>
+            </form>
+
+            ${isEdit ? `
+                <div class="mt-8 pt-4 border-t border-gray-200">
+                    <button onclick="handleDelete('product', '${id}')" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold soft-shadow hover:bg-red-700 transition duration-150">
+                        Delete Product
+                    </button>
+                </div>
+            ` : ''}
+            
+            <button onclick="renderView('productList')" class="w-full text-blue-600 py-3 mt-2 rounded-xl font-semibold hover:bg-gray-100 transition duration-150">Back to List</button>
+        `;
+
+        DOM.content.innerHTML = formHtml;
+        const form = document.getElementById('product-form');
+        form.addEventListener('submit', isEdit ? (e) => handleEditProduct(e, id) : handleAddProduct);
+        document.getElementById('product-image-input').addEventListener('change', previewImage);
+    }
+
+    function renderCustomerForm(id = null) {
+        const customer = id ? data.customers.find(c => c.id === id) : {};
+        const isEdit = !!id;
+
+        const formHtml = `
+            <form id="customer-form" class="space-y-4" data-id="${id || ''}">
+                <input type="text" name="name" placeholder="Customer Name" value="${customer.name || ''}" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 card-bg soft-shadow">
+                <input type="tel" name="phone" placeholder="Phone Number" value="${customer.phone || ''}" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 card-bg soft-shadow">
+                <input type="text" name="instagram" placeholder="Instagram Handle (@username)" value="${customer.instagram || ''}" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 card-bg soft-shadow">
+                <textarea name="address" placeholder="Shipping Address" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 card-bg soft-shadow">${customer.address || ''}</textarea>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold soft-shadow hover:bg-blue-700 transition duration-150">${isEdit ? 'Save Changes' : 'Save Customer'}</button>
+            </form>
+
+            ${isEdit ? `
+                <div class="mt-8 pt-4 border-t border-gray-200">
+                    <button onclick="handleDelete('customer', '${id}')" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold soft-shadow hover:bg-red-700 transition duration-150">
+                        Delete Customer
+                    </button>
+                </div>
+            ` : ''}
+            <button onclick="renderView('customerList')" class="w-full text-blue-600 py-3 mt-2 rounded-xl font-semibold hover:bg-gray-100 transition duration-150">Back to List</button>
+        `;
+
+        DOM.content.innerHTML = formHtml;
+        const form = document.getElementById('customer-form');
+        form.addEventListener('submit', isEdit ? (e) => handleEditCustomer(e, id) : handleAddCustomer);
+    }
+    
+    function renderAddOrderForm() {
+        if (data.products.length === 0 || data.customers.length === 0) {
+            DOM.content.innerHTML = `
+                <div class="card-bg p-6 rounded-xl soft-shadow text-center space-y-3">
+                    <p class="text-red-500 font-semibold">Cannot add order yet!</p>
+                    <p class="text-sm text-gray-600">Please add at least one product and one customer first to create an order.</p>
+                    <button onclick="renderView('productList')" class="text-sm text-blue-600 hover:underline">Add Product Now</button>
+                    <span class="text-sm text-gray-400 mx-2">|</span>
+                    <button onclick="renderView('customerList')" class="text-sm text-blue-600 hover:underline">Add Customer Now</button>
+                </div>
+            `;
+            return;
+        }
+
+        const productOptions = data.products.map(p => `<option value="${p.id}">${p.name} - ${p.size || 'N/A'} ($${p.price})</option>`).join('');
+        const customerOptions = data.customers.map(c => `<option value="${c.id}">${c.name} (${c.instagram || c.phone || 'ID: ' + c.id.substring(0, 4)})</option>`).join('');
+
+        const formHtml = `
+            <form id="order-form" class="space-y-4">
+                <select name="productId" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 card-bg soft-shadow">
+                    <option value="" disabled selected>Select Product</option>
+                    ${productOptions}
+                </select>
+                <select name="customerId" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 card-bg soft-shadow">
+                    <option value="" disabled selected>Select Customer</option>
+                    ${customerOptions}
+                </select>
+                <input type="number" name="amount" placeholder="Total Order Amount ($)" required step="0.01" min="0" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 card-bg soft-shadow">
+                <select name="status" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 card-bg soft-shadow bg-white">
+                    <option value="Processing" selected>Processing</option>
+                    <option value="Pending">Pending (Payment/Shipment)</option>
+                    <option value="Shipped">Shipped</option>
+                    <option value="Delivered">Delivered (Completed Sale)</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+                <textarea name="notes" placeholder="Order Notes (e.g., tracking number)" rows="2" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 card-bg soft-shadow"></textarea>
+                <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold soft-shadow hover:bg-green-700 transition duration-150">Create Order</button>
+            </form>
+        `;
+        DOM.content.innerHTML = formHtml;
+        document.getElementById('order-form').addEventListener('submit', handleAddOrder);
+    }
+
+    // --- Image Preview Handler ---
+    function previewImage(event) {
+        const file = event.target.files[0];
+        const previewContainer = document.getElementById('image-preview');
+        const previewImg = previewContainer.querySelector('img');
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            if (!previewImg.src) {
+                previewContainer.classList.add('hidden');
+            }
+        }
+    }
+
+    // --- ADD/EDIT Handlers ---
+
+    function handleAddProduct(event) {
+        event.preventDefault();
+        const form = event.target;
+        const fileInput = document.getElementById('product-image-input');
+        const file = fileInput.files[0];
+
+        const saveButton = form.querySelector('button[type="submit"]');
+        saveButton.disabled = true;
+        saveButton.innerHTML = '<span class="flex items-center justify-center"><svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Saving...</span>';
+
+        readFileAsBase64(file).then(base64Image => {
+            const newProduct = {
+                id: generateId(),
+                name: form.name.value,
+                size: form.size.value || 'N/A',
+                price: parseFloat(form.price.value).toFixed(2),
+                description: form.description.value,
+                image: base64Image, 
+                dateAdded: Date.now()
+            };
+
+            data.products.push(newProduct);
+            saveData(STORAGE_KEYS.PRODUCTS, data.products);
+            form.reset();
+            showMessage("Success!", "Product saved successfully: " + newProduct.name);
+            renderView('productList');
+        }).finally(() => {
+            saveButton.disabled = false;
+            saveButton.textContent = 'Save Product';
+        });
+    }
+
+    function handleEditProduct(event, id) {
+        event.preventDefault();
+        const form = event.target;
+        const fileInput = document.getElementById('product-image-input');
+        const file = fileInput.files[0];
+        
+        const index = data.products.findIndex(p => p.id === id);
+        if (index === -1) return showMessage("Error", "Product not found!");
+
+        const saveButton = form.querySelector('button[type="submit"]');
+        saveButton.disabled = true;
+        saveButton.innerHTML = '<span class="flex items-center justify-center"><svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Saving...</span>';
+
+        readFileAsBase64(file).then(base64Image => {
+            const updatedProduct = {
+                ...data.products[index],
+                name: form.name.value,
+                size: form.size.value || 'N/A',
+                price: parseFloat(form.price.value).toFixed(2),
+                description: form.description.value,
+                image: base64Image !== null ? base64Image : data.products[index].image, 
+            };
+            
+            data.products[index] = updatedProduct;
+            saveData(STORAGE_KEYS.PRODUCTS, data.products);
+            showMessage("Success!", `Product ${updatedProduct.name} updated.`);
+            renderView('productList');
+        }).finally(() => {
+            saveButton.disabled = false;
+            saveButton.textContent = 'Save Changes';
+        });
+    }
+
+    function handleAddCustomer(event) {
+        event.preventDefault();
+        const form = event.target;
+        const newCustomer = {
+            id: generateId(),
+            name: form.name.value,
+            phone: form.phone.value,
+            instagram: form.instagram.value,
+            address: form.address.value,
+            dateAdded: Date.now()
+        };
+        data.customers.push(newCustomer);
+        saveData(STORAGE_KEYS.CUSTOMERS, data.customers);
+        form.reset();
+        showMessage("Success!", "Customer saved successfully: " + newCustomer.name);
+        renderView('customerList');
+    }
+
+    function handleEditCustomer(event, id) {
+        event.preventDefault();
+        const form = event.target;
+        const index = data.customers.findIndex(c => c.id === id);
+        if (index === -1) return showMessage("Error", "Customer not found!");
+
+        const updatedCustomer = {
+            ...data.customers[index],
+            name: form.name.value,
+            phone: form.phone.value,
+            instagram: form.instagram.value,
+            address: form.address.value,
+        };
+        
+        data.customers[index] = updatedCustomer;
+        saveData(STORAGE_KEYS.CUSTOMERS, data.customers);
+        showMessage("Success!", `Customer ${updatedCustomer.name} updated.`);
+        renderView('customerList');
+    }
+    
+    function handleAddOrder(event) {
+        event.preventDefault();
+        const form = event.target;
+        const newOrder = {
+            id: generateId(),
+            productId: form.productId.value,
+            customerId: form.customerId.value,
+            amount: parseFloat(form.amount.value).toFixed(2),
+            status: form.status.value,
+            notes: form.notes.value,
+            orderDate: Date.now()
+        };
+        data.orders.push(newOrder);
+        saveData(STORAGE_KEYS.ORDERS, data.orders);
+        form.reset();
+        showMessage("Success!", `Order ${newOrder.id.substring(0, 6)} created!`);
+        renderView('dashboard');
+    }
+    
+    // --- DELETE Handler ---
+    function handleDelete(type, id) {
+        customConfirm(`Are you absolutely sure you want to permanently delete this ${type}? This action cannot be undone.`, (confirmed) => {
+            if (!confirmed) return;
+
+            let list, key, name, redirectView;
+
+            if (type === 'product') {
+                list = data.products;
+                key = STORAGE_KEYS.PRODUCTS;
+                const item = list.find(p => p.id === id);
+                name = item ? item.name : 'Item';
+                redirectView = 'productList';
+
+                // Also delete related orders
+                data.orders = data.orders.filter(o => o.productId !== id);
+                saveData(STORAGE_KEYS.ORDERS, data.orders);
+
+            } else if (type === 'customer') {
+                list = data.customers;
+                key = STORAGE_KEYS.CUSTOMERS;
+                const item = list.find(c => c.id === id);
+                name = item ? item.name : 'Item';
+                redirectView = 'customerList';
+
+                // Also delete related orders
+                data.orders = data.orders.filter(o => o.customerId !== id);
+                saveData(STORAGE_KEYS.ORDERS, data.orders);
+            } else {
+                return;
+            }
+
+            const initialLength = list.length;
+            const newList = list.filter(item => item.id !== id);
+
+            if (newList.length < initialLength) {
+                saveData(key, newList);
+                showMessage("Deleted!", `${type.charAt(0).toUpperCase() + type.slice(1)} "${name}" has been permanently removed.`);
+                renderView(redirectView);
+            } else {
+                showMessage("Error", `${type.charAt(0).toUpperCase() + type.slice(1)} not found for deletion.`);
+            }
+        });
+    }
+
+    // --- Reports and Export Logic ---
+
+    function renderReports() {
+        const totalSales = data.orders.filter(o => o.status === 'Delivered').reduce((sum, order) => sum + parseFloat(order.amount || 0), 0);
+        const deliveredCount = data.orders.filter(o => o.status === 'Delivered').length;
+        const processingCount = data.orders.filter(o => o.status === 'Processing').length;
+        const pendingCount = data.orders.filter(o => o.status === 'Pending').length;
+
+        const cardStyle = "card-bg p-4 rounded-xl soft-shadow mb-4 flex-1";
+
+        DOM.content.innerHTML = `
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="${cardStyle} bg-gradient-to-br from-blue-50 to-blue-200">
+                    <p class="text-sm text-gray-600">Total Revenue (Delivered)</p>
+                    <h2 class="text-2xl font-extrabold text-blue-700 mt-1">$${totalSales.toFixed(2)}</h2>
+                </div>
+                <div class="${cardStyle} bg-gradient-to-br from-purple-50 to-purple-200">
+                    <p class="text-sm text-gray-600">Total Orders</p>
+                    <h2 class="text-2xl font-extrabold text-purple-700 mt-1">${data.orders.length}</h2>
+                </div>
+            </div>
+
+            <div class="${cardStyle} col-span-2">
+                <h3 class="font-bold text-lg text-gray-700 mb-3">Order Status Breakdown</h3>
+                <ul class="space-y-2 text-sm text-gray-600">
+                    <li class="flex justify-between"><span>Delivered:</span> <span class="font-semibold text-green-600">${deliveredCount}</span></li>
+                    <li class="flex justify-between"><span>Processing:</span> <span class="font-semibold text-blue-600">${processingCount}</span></li>
+                    <li class="flex justify-between"><span>Pending:</span> <span class="font-semibold text-yellow-600">${pendingCount}</span></li>
+                    <li class="flex justify-between"><span>Other (Shipped/Cancelled):</span> <span class="font-semibold">${data.orders.length - deliveredCount - processingCount - pendingCount}</span></li>
+                </ul>
+            </div>
+
+            <h3 class="font-bold text-lg text-gray-700 mt-6 mb-3">Data Backup & Restore</h3>
+            <p class="text-sm text-gray-600 mb-4">JSON is the recommended format for backup, as it includes product photos (Base64) and is easy to store on services like GitHub.</p>
+
+            <!-- Export Buttons -->
+            <div class="${cardStyle} bg-red-50 p-4 mb-3">
+                <h4 class="font-bold text-base text-gray-700 mb-2">Export Data (Backup)</h4>
+                <button onclick="exportToJSON()" class="w-full bg-red-600 text-white py-3 rounded-lg font-bold soft-shadow hover:bg-red-700 transition duration-150 flex items-center justify-center mb-2">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Export All as JSON (Recommended)
+                </button>
+                <button onclick="exportToCSV()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-bold soft-shadow hover:bg-orange-600 transition duration-150 flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-4h6v4m0 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v8m8 0h3a2 2 0 002-2v-3a2 2 0 00-2-2h-3"></path></svg>
+                    Export Orders/Customers as CSV
+                </button>
+            </div>
+
+            <!-- Import Section -->
+            <div class="${cardStyle} bg-green-50 p-4">
+                <h4 class="font-bold text-base text-gray-700 mb-2">Import Data (Restore)</h4>
+                <p class="text-xs text-red-600 mb-3 font-semibold">WARNING: Importing a file will completely OVERWRITE your current data!</p>
+                <input type="file" id="json-import-input" accept=".json" class="file-input" onchange="handleImport(event)">
+                <label for="json-import-input" class="file-input-label">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    Select JSON Backup File
+                </label>
+            </div>
+        `;
+    }
+
+    function exportToJSON() {
+        if (data.products.length + data.customers.length + data.orders.length === 0) {
+            showMessage("Export Error", "No data available to export.");
+            return;
+        }
+
+        const jsonContent = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+        
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute("href", url);
+        link.setAttribute("download", "OrderManager_BACKUP_" + new Date().toISOString().split('T')[0] + ".json");
+        
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        showMessage("JSON Export Complete", "A structured JSON file containing ALL your data (including product photos) has been saved.");
+    }
+
+    function handleImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        customConfirm("WARNING: Are you sure you want to import this JSON file? This will permanently OVERWRITE ALL existing data.", (confirmed) => {
+            if (!confirmed) {
+                event.target.value = ''; // Reset file input
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (importedData.products && importedData.customers && importedData.orders) {
+                        
+                        localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(importedData.products));
+                        localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(importedData.customers));
+                        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(importedData.orders));
+
+                        loadData();
+                        showMessage("Import Successful!", `Successfully loaded data from ${file.name}. Your CRM data has been restored.`);
+                        renderView('dashboard');
+                    } else {
+                        showMessage("Import Failed", "The selected file is not a valid Order Manager backup file (missing required data structures).");
+                    }
+                } catch (error) {
+                    console.error("Data Import Error:", error);
+                    showMessage("Import Failed", "Could not parse the JSON file. Please ensure it is a correctly formatted backup file.");
+                }
+            };
+
+            reader.onerror = function() {
+                showMessage("File Read Error", "Could not read the selected file.");
+            };
+
+            reader.readAsText(file);
+        });
+    }
+
+    function exportToCSV() {
+        if (data.orders.length === 0) {
+            showMessage("Export Error", "No data available to export.");
+            return;
+        }
+
+        let csvContent = "";
+        const escapeCSV = (str) => `"${String(str || '').replace(/"/g, '""')}"`;
+
+        // 1. PRODUCTS SECTION
+        csvContent += "--- PRODUCTS ---\n";
+        const productHeaders = ["Product ID", "Name", "Size", "Price", "Description", "Date Added"];
+        csvContent += productHeaders.map(escapeCSV).join(",") + "\n";
+        data.products.forEach(p => {
+            const row = [p.id, p.name, p.size, p.price, p.description, formatDate(p.dateAdded)];
+            csvContent += row.map(escapeCSV).join(",") + "\n";
+        });
+
+        // 2. CUSTOMERS SECTION
+        csvContent += "\n--- CUSTOMERS ---\n";
+        const customerHeaders = ["Customer ID", "Name", "Phone", "Instagram", "Address", "Date Added"];
+        csvContent += customerHeaders.map(escapeCSV).join(",") + "\n";
+        data.customers.forEach(c => {
+            const row = [c.id, c.name, c.phone, c.instagram, c.address, formatDate(c.dateAdded)];
+            csvContent += row.map(escapeCSV).join(",") + "\n";
+        });
+
+        // 3. ORDERS SECTION
+        csvContent += "\n--- ORDERS ---\n";
+        const orderHeaders = ["Order ID", "Order Date", "Status", "Amount", "Product Name", "Customer Name", "Customer Instagram", "Notes"];
+        csvContent += orderHeaders.map(escapeCSV).join(",") + "\n";
+
+        data.orders.forEach(o => {
+            const product = data.products.find(p => p.id === o.productId) || { name: 'Unknown', size: 'N/A' };
+            const customer = data.customers.find(c => c.id === o.customerId) || { name: 'Unknown', instagram: 'N/A' };
+
+            const row = [
+                o.id,
+                formatDate(o.orderDate),
+                o.status,
+                o.amount,
+                product.name,
+                customer.name,
+                customer.instagram,
+                o.notes
+            ];
+            csvContent += row.map(escapeCSV).join(",") + "\n";
+        });
+
+        // Trigger the download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute("href", url);
+        link.setAttribute("download", "OrderManager_Backup_" + new Date().toISOString().split('T')[0] + ".csv");
+        
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        showMessage("Export Complete", "CSV file downloaded. Note: CSV does not include product photos (use JSON for that).");
+    }
+
+
+    // --- Initialization ---
+
+    function initializeApp() {
+        // This is the first line of app logic. It should hide the debug error message.
+        document.getElementById('debug-error').style.display = 'none';
+
+        loadData();
+        renderView('dashboard');
+
+        // Set up navigation event listeners
+        DOM.navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const view = button.getAttribute('data-view');
+                renderView(view);
+            });
+        });
+
+        // Expose global functions
+        window.closeModal = closeModal;
+        window.previewImage = previewImage;
+        window.handleDelete = handleDelete;
+        window.exportToJSON = exportToJSON;
+        window.handleImport = handleImport;
+        window.exportToCSV = exportToCSV;
+    }
+
+    // Use DOMContentLoaded which is faster and more reliable than window.onload
+    document.addEventListener('DOMContentLoaded', initializeApp);
+    
+</script>
+</body>
+</html>
+
