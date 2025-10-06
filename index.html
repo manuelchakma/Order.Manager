@@ -1262,6 +1262,48 @@
     
     // Initial load
     renderView('dashboard'); 
+    
+/* ====== Safe Online Restore from GitHub ======
+   Reads backup.json from your public repo
+   and fills localStorage when the app loads
+================================================ */
+
+async function restoreBackup() {
+  try {
+    const url =
+      "https://raw.githubusercontent.com/manuelchakma/Order.Manager/main/backup.json";
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("No backup file found online.");
+
+    const data = await res.json();
+
+    localStorage.setItem(
+      "order_manager_products",
+      JSON.stringify(data.products || [])
+    );
+    localStorage.setItem(
+      "order_manager_customers",
+      JSON.stringify(data.customers || [])
+    );
+    localStorage.setItem(
+      "order_manager_orders",
+      JSON.stringify(data.orders || [])
+    );
+
+    console.log("✅ Data restored from GitHub");
+    if (typeof showMessage === "function") {
+      showMessage("Restore Complete", "Data loaded from GitHub backup.");
+    }
+  } catch (err) {
+    console.error("❌ Restore failed:", err);
+    if (typeof showMessage === "function") {
+      showMessage("Restore Failed", "Could not fetch data from GitHub.");
+    }
+  }
+}
+
+// Automatically try to restore data when app opens (needs internet)
+window.addEventListener("load", restoreBackup);
 </script>
 </body>
 </html>
